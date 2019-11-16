@@ -22,14 +22,36 @@ The dataset is stored in a comma-separated-value (CSV) file and there are a tota
 ## Assignment
 
 Set the path and load the necessary packages:
-```{r}
+
+```r
 setwd("C:/Users/user/datasciencecoursera/RepData_PeerAssessment1")
 library(dplyr)
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
 library(ggplot2)
 ```
 
 Check if the (zipped) data folder has already been downloaded. If not, download:
-```{r}
+
+```r
 filename <- "activity.zip"
 
 if (!file.exists(filename)){
@@ -39,72 +61,106 @@ if (!file.exists(filename)){
 ```
 
 Check if the (zipped) folder has already been unzipped. If not, unzip:
-```{r}
+
+```r
 if (!file.exists("activity")) { 
   unzip(filename) 
 }
 ```
 
 ### 1. Load the data and (if needed) transform into a suitable format for the analysis:
-```{r}
+
+```r
 data <- read.csv("activity.csv", header = TRUE)
 ```
 
 Total number of steps taken each day:
-```{r}
+
+```r
 datadaily <- data %>% group_by(date) %>% summarise(sum(steps))
 names(datadaily)[2] <- "Total steps"
 ```
 
 ### 2. Histogram of the total number of steps taken each day:
-```{r histogram1, fig.height=4}
+
+```r
 hist(datadaily$`Total steps`, main="Total number of steps taken each day", xlab="Steps per day", ylab="Frequency", col="darkmagenta")
 ```
+
+![](PA1_template_files/figure-html/histogram1-1.png)<!-- -->
 
 ### 3. Mean and median number of steps taken each day:
 
 Mean number of steps per day:
-```{r}
+
+```r
 meanstep <- mean(datadaily$`Total steps`, na.rm = TRUE)
 print(meanstep)
 ```
 
+```
+## [1] 10766.19
+```
+
 Median number of steps per day:
-```{r}
+
+```r
 medianstep <- median(datadaily$`Total steps`, na.rm = TRUE)
 print(medianstep)
 ```
 
+```
+## [1] 10765
+```
+
 ### 4. Time series plot of the average number of steps taken:
 
-```{r}
+
+```r
 avgstepsgrouped1 <- data %>% group_by(interval) %>% summarise(mean(steps, na.rm = TRUE))
 names(avgstepsgrouped1)[2] <- "Average steps"
 ```
 
 Plot the average number of steps:
-```{r timeplot1, fig.height=4}
+
+```r
 g <- ggplot(avgstepsgrouped1, aes(avgstepsgrouped1$interval, avgstepsgrouped1$`Average steps`))
 g + geom_line(col="steelblue", na.rm = TRUE) + labs(title = "Average number of steps taken per 5-minute interval") + labs(x = "Interval") + labs(y = "Number of steps")
 ```
 
+![](PA1_template_files/figure-html/timeplot1-1.png)<!-- -->
+
 ### 5. The 5-minute interval that, on average, contains the maximum number of steps:
-```{r}
+
+```r
 maxstep <- max(avgstepsgrouped1$`Average steps`)
 intervalmaxwithdate <- avgstepsgrouped1[which(avgstepsgrouped1$`Average steps` == maxstep),1:2]
 print(intervalmaxwithdate)
 ```
 
+```
+## # A tibble: 1 x 2
+##   interval `Average steps`
+##      <int>           <dbl>
+## 1      835            206.
+```
+
 Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
-```{r}
+
+```r
 sum(is.na(data$steps))
+```
+
+```
+## [1] 2304
 ```
 
 ### 6. Code to describe and show a strategy for imputing missing data: 
 
 Here we will create a new dataset that is equal to the original dataset but with the missing data filled in.
 
-```{r}
+
+```r
 rownr <- dim(data)[1]
 datena <- as.data.frame(data$date)
 names(datena)[1] <- "datena"        ## dates with NAs
@@ -112,13 +168,15 @@ dataimputed <- data
 ```
 
 Mean number of steps per day:
-```{r}
+
+```r
 meansteps <- data %>% group_by(date) %>% summarise(mean(steps))
 names(meansteps)[2] <- "Average mean steps"
 ```
 
 Missing values are filled with meansteps values. If meansteps value is also missing, then, they are filled with the mean of meansteps:
-```{r}
+
+```r
 for (i in 1:rownr){
   if (is.na(data[i, 1]) == TRUE & is.na(meansteps[which(meansteps$date == datena[i,1]),2]) == TRUE){
       dataimputed[i, 1] <- mean(meansteps$`Average mean steps`, na.rm=TRUE)
@@ -131,25 +189,39 @@ for (i in 1:rownr){
 ```
 
 ### 7. Histogram of the total number of steps taken each day after missing values are imputed:
-```{r}
+
+```r
 datadailyimputed <- dataimputed %>% group_by(date) %>% summarise(sum(steps))
 names(datadailyimputed)[2] <- "Total steps"
 ```
 
-```{r histogram2, fig.height=4}
+
+```r
 hist(datadailyimputed$`Total steps`, main="Total number of steps taken each day", xlab="Steps per day", ylab="Frequency", col="darkmagenta")
 ```
 
+![](PA1_template_files/figure-html/histogram2-1.png)<!-- -->
+
 Mean total number of steps taken per day: 
-```{r}
+
+```r
 meanstepimputed <- mean(datadailyimputed$`Total steps`, na.rm = TRUE)
 print(meanstepimputed)
 ```
 
+```
+## [1] 10766.19
+```
+
 Median total number of steps taken per day: 
-```{r}
+
+```r
 medianstepimputed <- median(datadailyimputed$`Total steps`, na.rm = TRUE)
 print(medianstepimputed)
+```
+
+```
+## [1] 10766.19
 ```
 
 These values differ from the estimates from the first part of the assignment. The estimates of the total daily number of steps are now higher as we've now inserted positive values in place of the NA values, which were converted to 0's while calculating the mean and the median.
@@ -157,7 +229,8 @@ These values differ from the estimates from the first part of the assignment. Th
 ### 8. Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends:
 
 Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day:
-```{r}
+
+```r
 dataimputed$day <- weekdays(as.Date(dataimputed$date))
 for (i in 1:rownr) {
   if (dataimputed[i,4] %in% c("Saturday","Sunday")){
@@ -172,9 +245,12 @@ names(avgstepsgrouped)[3] <- "Average steps"
 ```
 
 Generate the plot:
-```{r timeplot2, fig.height=4}
+
+```r
 g <- ggplot(avgstepsgrouped, aes(avgstepsgrouped$interval, avgstepsgrouped$`Average steps`))
 g + geom_line(col="steelblue") + facet_grid(. ~ avgstepsgrouped$dayofweek) + labs(title = "Average number of steps taken per 5-minute interval") + labs(x = "Interval") + labs(y = "Number of steps")
 ```
+
+![](PA1_template_files/figure-html/timeplot2-1.png)<!-- -->
 
 Activity patterns in weekdays seem to be different from those in weekends.
